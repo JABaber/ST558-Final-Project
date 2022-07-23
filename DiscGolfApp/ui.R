@@ -4,6 +4,7 @@
 
 library(shiny)
 library(shinydashboard)
+library(DT)
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
@@ -133,11 +134,11 @@ body <- dashboardBody(
       tabItem(tabName = "dataSection",
         fluidPage(
               titlePanel("2022 Disc Golf Pro Tour Data Set"),
-              sidebarLayout(
-                sidebarPanel(downloadButton("downloadData", "Download")),
-                mainPanel(dataTableOutput("dataTable"))
+              mainPanel(
+                dataTableOutput("dataTable"),
+                downloadButton("downloadData", "Download")
+                )
               )
-        )
       )
   )
 )
