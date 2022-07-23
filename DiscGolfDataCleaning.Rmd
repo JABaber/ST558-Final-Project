@@ -1,0 +1,68 @@
+---
+title: "Discs"
+author: "Josh Baber"
+date: "7/13/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+allDiscs <- read_csv("Data/discs.csv")
+```
+
+```{r}
+names(allDiscs)
+```
+
+```{r}
+summary(allDiscs)
+```
+
+```{r}
+fullSeason <- read_csv("Data/udisclive.csv")
+fullSeason <- fullSeason[-c(1, 220),-c(3, 5, 7, 13, 19, 20)]
+```
+
+```{r}
+colnames(fullSeason) <- c("Place", "Name", "Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                          "Circle2Putting", "ThrowInRate", "OBRate")
+```
+
+```{r}
+fullSeason$Place <- as.numeric(sub("T", "", fullSeason$Place))
+```
+
+```{r}
+fullSeason[,c(3:12)] <- data.frame(sapply(fullSeason[,c(3:12)], function(x){as.numeric(gsub("%", "", x))/100}))
+```
+
+```{r}
+points <- read_csv("Data/Udiscpoints.csv")
+points <- points[,-c(1,4)]
+colnames(points) <- c("Name", "Points")
+```
+
+```{r}
+fullSeason <- left_join(fullSeason, points, by = c("Name" = "Name"))
+```
+
+```{r}
+head(fullSeason)
+```
+
+```{r}
+scoresData <- fullSeason[,-c(1,2)]
+lm(Points ~ ., data = scoresData)
+```
+
+```{r}
+plot(fullSeason$Circle1XPutting, fullSeason$Points)
+```
