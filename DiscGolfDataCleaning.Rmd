@@ -14,7 +14,7 @@ library(tidyverse)
 ```
 
 ```{r}
-allDiscs <- read_csv("Data/discs.csv")
+allDiscs <- read_csv("../Data/discs.csv")
 ```
 
 ```{r}
@@ -26,7 +26,7 @@ summary(allDiscs)
 ```
 
 ```{r}
-fullSeason <- read_csv("Data/udisclive.csv")
+fullSeason <- read_csv("../Data/udisclive.csv")
 fullSeason <- fullSeason[-c(1, 220),-c(3, 5, 7, 13, 19, 20)]
 ```
 
@@ -45,7 +45,7 @@ fullSeason[,c(3:12)] <- data.frame(sapply(fullSeason[,c(3:12)], function(x){as.n
 ```
 
 ```{r}
-points <- read_csv("Data/Udiscpoints.csv")
+points <- read_csv("../Data/Udiscpoints.csv")
 points <- points[,-c(1,4)]
 colnames(points) <- c("Name", "Points")
 ```
