@@ -1,13 +1,14 @@
-#
-# This is the server logic of a Shiny web application. You can run the
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+# ST558 Final Project (Server Side)
+# Josh Baber
+# shiny::runGitHub("JABaber/ST558-Final-Project", subdir = "DiscGolfApp/")
+
 
 library(shiny)
+library(tidyverse)
+library(GGally)
+library(DT)
+
+fullSeason <- read_csv("../2022Season.csv")
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
@@ -25,6 +26,10 @@ shinyServer(function(input, output) {
     
     output$DGPT <- renderImage({
       list(src = "../DGPT.jpg", width = "60%", height = "60%")
+    }, deleteFile = FALSE)
+    
+    output$dataTable <- renderDataTable({
+      fullSeason
     })
 
 })
