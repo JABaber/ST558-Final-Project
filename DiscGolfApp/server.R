@@ -22,5 +22,9 @@ shinyServer(function(input, output) {
         hist(x, breaks = bins, col = 'darkgray', border = 'white')
 
     })
+    
+    output$DGPT <- renderImage({
+      list(src = "../DGPT.jpg", width = "60%", height = "60%")
+    })
 
 })
