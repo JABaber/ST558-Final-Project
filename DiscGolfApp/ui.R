@@ -62,7 +62,7 @@ body <- dashboardBody(
                 ),
                 
                 
-                "In short, I was able to use ", tags$a("this data scraper Chrome extension", href = "https://chrome.google.com/webstore/detail/instant-data-scraper/ofaokhiedipichpaobibbnahnkdoiiah?hl=en-US"), " to grab the data from the UDisc webpage as a CSV file.  It took some cleaning to do, like dropping irrelevant columns, renaming the columns, and scaling them.  Most of the data is given as percentages with a % symbol, so I had to use lapply() to remove them and convert them from decimals for interpretation's sake.  Also, the total points each player had were not available on the 2022 Season Stats Webpage, so I had to go to the ", tags$a("2022 Season Standings Webpage", href = "https://www.udisclive.com/standings?d=MPO"), " to again scrape the data into a CSV.  I then performed a left join on the player's names in R to create the final data set.  An image of the 2022 Pro Tour Schedule can be found below:", br(), imageOutput("DGPT", inline = TRUE), br(), 
+                "In short, I was able to use ", tags$a("this data scraper Chrome extension", href = "https://chrome.google.com/webstore/detail/instant-data-scraper/ofaokhiedipichpaobibbnahnkdoiiah?hl=en-US"), " to grab the data from the UDisc webpage as a CSV file.  It took some cleaning to do, like dropping irrelevant columns, renaming the columns, and scaling them.  Most of the data is given as percentages with a % symbol, so I had to use lapply() to remove them and convert them from decimals for interpretation's sake.  Also, the total points each player had were not available on the 2022 Season Stats Webpage, so I had to go to the ", tags$a("2022 Season Standings Webpage", href = "https://www.udisclive.com/standings?d=MPO"), " to again scrape the data into a CSV.  I then performed a left join on the player's names in R to create the final data set.  The code to create the data set can be found", tags$a("here.", href = "https://github.com/JABaber/ST558-Final-Project/blob/main/DiscGolfDataCleaning.Rmd"),  "An image of the 2022 Pro Tour Schedule can be found below:", br(), imageOutput("DGPT", inline = TRUE), br(), 
                 
                 h3("Explanation of Tabs"), br(),
                 h5("Data Exploration Tab"), br(),
@@ -74,45 +74,70 @@ body <- dashboardBody(
       tabItem(tabName = "EDASection",
               fluidRow(
                 box(width = 4,
-                  selectInput("plotType", "Select Plot Type", choices = c("Box Plot", "Histogram", "Scatter Plot", "Bar Plot")),
+                  selectInput("plotType", "Select Plot Type", choices = list("Box Plot", "Histogram", "Scatter Plot", "Bar Plot")),
                   conditionalPanel(
                     condition = "input.plotType == 'Box Plot'",
-                    radioButtons("var", "Choose Variable for Box Plot", c("test1", "test2"))
+                    radioButtons("plotBoxVar", "Choose Variable for Box Plot", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                              "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                              "Circle2Putting", "ThrowInRate", "OBRate"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Histogram'",
-                    radioButtons("var", "Choose Variable for Histogram", c("test1", "test2"))
+                    radioButtons("plotHistVar", "Choose Variable for Histogram", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                  "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                  "Circle2Putting", "ThrowInRate", "OBRate"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Scatter Plot'",
-                    checkboxGroupInput("vars", "Choose Variables for Scatter Plot", c("test1", "test2"))
+                    checkboxGroupInput("plotScatVars", "Choose Variables for Scatter Plot", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                             "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                             "Circle2Putting", "ThrowInRate", "OBRate"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Bar Plot'",
-                    radioButtons("var", "Choose Variable for Bar Plot", c("test1", "test2"))
+                    radioButtons("plotBarVar", "Choose Variable for Bar Plot", c("test1", "test2"))
                   )
                 ),
                 box(width = 4,
                   selectInput("tableType", "Select Table Type", choices = c("Numeric Summaries", "Contingency Table")),
                   conditionalPanel(
                     condition = "input.tableType == 'Numeric Summaries'",
-                    checkboxGroupInput("vars", "Choose Variables to Summarize", c("test1", "test2")),
-                    checkboxGroupInput("summaries", "Choose Summary Statistics", c("Mean", "Standard Deviation", "Minimum", "Median", "Maximum")),
+                    checkboxGroupInput("tableVars", "Choose Variables to Summarize", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                          "Circle2Putting", "ThrowInRate", "OBRate")),
+                    checkboxGroupInput("summaries", "Choose Summary Statistics", c("Mean", "Standard Deviation", "Minimum", "Median", "Maximum"))
                   ),
                   conditionalPanel(
                     condition = "input.tableType == 'Contingency Table'",
-                    radioButtons("var", "Choose Statistic to Count Players Above Or Below a Certain Threshold", c("test1", "test2")),
+                    radioButtons("tableVar", "Choose Variable to Count Players Above Or Below a Certain Threshold", c("test1", "test2")),
                     sliderInput("countsCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50)
                   )
                 ),
                 box(width = 4,
-                  checkboxInput("filterData", "Choose a Variable and Threshold to Filter Data On"),
+                  checkboxInput("filterPlotData", "Choose a Variable and Threshold to Filter Data For the Plot On"),
+                  checkboxInput("filterTabData", "Choose a Variable and Threshold to Filter Data For the Summary Table On"),
                   conditionalPanel(
-                    condition = "input.filterData == 1",
-                    radioButtons("filterVar", "Variable to Filter On", c("test1", "test2")),
-                    sliderInput("filterCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50),
-                    radioButtons("filterDirection", "Filter Data that is Above or Below this Cutoff?", c("Above", "Below"))
+                    condition = "input.filterPlotData == 1",
+                    radioButtons("filterPlotVar", "Variable to Filter the Plot On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                "Circle2Putting", "ThrowInRate", "OBRate")),
+                    sliderInput("filterPlotCutoff", "Value to Cutoff Plot Data At (In %)", min = 0, max = 100, value = 50),
+                    radioButtons("filterPlotDirection", "Filter Plot Data that is Above or Below this Cutoff?", c("Above", "Below"))
+                  ),
+                  conditionalPanel(
+                    condition = "input.filterTabData == 1",
+                    radioButtons("filterTabVar", "Variable to Filter the Table On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                         "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                         "Circle2Putting", "ThrowInRate", "OBRate")),
+                    sliderInput("filterTabCutoff", "Value to Cutoff Table Data At (In %)", min = 0, max = 100, value = 50),
+                    radioButtons("filterTabDirection", "Filter Table Data that is Above or Below this Cutoff?", c("Above", "Below"))
                   )
+                ),
+                box(
+                  plotOutput("EDAPlot")
+                ),
+                box(
+                  dataTableOutput("EDATable")
                 )
               )
       ),
@@ -135,6 +160,15 @@ body <- dashboardBody(
         fluidPage(
               titlePanel("2022 Disc Golf Pro Tour Data Set"),
               mainPanel(
+                box(width = 4,
+                    checkboxInput("filterDT", "Choose a Variable and Threshold to Filter Data On"),
+                    conditionalPanel(
+                      condition = "input.filterDT == 1",
+                      radioButtons("filterDTVar", "Variable to Filter On", c("test1", "test2")),
+                      sliderInput("filterDTCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50),
+                      radioButtons("filterDTDirection", "Filter Data that is Above or Below this Cutoff?", c("Above", "Below"))
+                    )
+                ),
                 dataTableOutput("dataTable"),
                 downloadButton("downloadData", "Download")
                 )

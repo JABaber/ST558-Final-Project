@@ -64,5 +64,5 @@ lm(Points ~ ., data = scoresData)
 ```
 
 ```{r}
-plot(fullSeason$Circle1XPutting, fullSeason$Points)
+ggplot(data = fullSeason, aes(x = Bogey)) + geom_boxplot()
 ```
