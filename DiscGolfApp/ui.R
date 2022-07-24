@@ -52,7 +52,7 @@ body <- dashboardBody(
                 ),
                 
                 
-                "In short, I was able to use ", tags$a("this data scraper Chrome extension", href = "https://chrome.google.com/webstore/detail/instant-data-scraper/ofaokhiedipichpaobibbnahnkdoiiah?hl=en-US"), " to grab the data from the UDisc webpage as a CSV file.  It took some cleaning to do, like dropping irrelevant columns, renaming the columns, and scaling them.  Most of the data is given as percentages with a % symbol, so I had to use lapply() to remove them and convert them from decimals for interpretation's sake.  Also, the total points each player had were not available on the 2022 Season Stats Webpage, so I had to go to the ", tags$a("2022 Season Standings Webpage", href = "https://www.udisclive.com/standings?d=MPO"), " to again scrape the data into a CSV.  I then performed a left join on the player's names in R to create the final data set.  The code to create the data set can be found", tags$a("here.", href = "https://github.com/JABaber/ST558-Final-Project/blob/main/DiscGolfDataCleaning.Rmd"),  "An image of the 2022 Pro Tour Schedule can be found below:", br(), imageOutput("DGPT", inline = TRUE), br(), 
+                "In short, I was able to use ", tags$a("this data scraper Chrome extension", href = "https://chrome.google.com/webstore/detail/instant-data-scraper/ofaokhiedipichpaobibbnahnkdoiiah?hl=en-US"), " to grab the data from the UDisc webpage as a CSV file.  It took some cleaning to do, like dropping irrelevant columns, renaming the columns, and scaling them.  Most of the data is given as percentages with a % symbol, so I had to use lapply() to remove them and convert them from decimals since whole numbers are easier to interpret.  Also, the total points each player had were not available on the 2022 Season Stats Webpage, so I had to go to the ", tags$a("2022 Season Standings Webpage", href = "https://www.udisclive.com/standings?d=MPO"), " to again scrape the data into a CSV.  I then performed a left join on the player's names in R to create the final data set.  The code to create the data set can be found", tags$a("here.", href = "https://github.com/JABaber/ST558-Final-Project/blob/main/DiscGolfDataCleaning.Rmd"),  "An image of the 2022 Pro Tour Schedule can be found below:", br(), imageOutput("DGPT", inline = TRUE), br(), 
                 
                 h3("Explanation of Tabs"), br(),
                 h5("Data Exploration Tab"), br(),
@@ -183,7 +183,7 @@ body <- dashboardBody(
                       radioButtons("filterDTVar", "Variable to Filter On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                 "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                 "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
-                      sliderInput("filterDTCutoff", "Value to Cutoff At (In %)", min = 0, max = 1, value = 0.5),
+                      sliderInput("filterDTCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50),
                       radioButtons("filterDTDirection", "Filter Data that is Above or Below this Cutoff?", c("Above", "Below"))
                     )
                 ),
