@@ -41,7 +41,7 @@ fullSeason$Place <- as.numeric(sub("T", "", fullSeason$Place))
 ```
 
 ```{r}
-fullSeason[,c(3:12)] <- data.frame(sapply(fullSeason[,c(3:12)], function(x){as.numeric(gsub("%", "", x))/100}))
+fullSeason[,c(3:12)] <- data.frame(sapply(fullSeason[,c(3:12)], function(x){as.numeric(gsub("%", "", x))}))
 ```
 
 ```{r}
@@ -52,6 +52,7 @@ colnames(points) <- c("Name", "Points")
 
 ```{r}
 fullSeason <- left_join(fullSeason, points, by = c("Name" = "Name"))
+fullSeason$Points <- as.numeric(fullSeason$Points)
 ```
 
 ```{r}
@@ -66,3 +67,12 @@ lm(Points ~ ., data = scoresData)
 ```{r}
 ggplot(data = fullSeason, aes(x = Bogey)) + geom_boxplot()
 ```
+
+```{r}
+colMeans(scoresData)
+```
+
+```{r}
+scoresData %>% colMeans()
+```
+

@@ -8,7 +8,6 @@ library(DT)
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
-    menuItem("Example", tabName = "exampleSection"),
     menuItem("About", tabName = "aboutSection"),
     menuItem("Data Exploration", tabName = "EDASection"),
     menuItem("Modeling", tabName = "modelSection"),
@@ -19,23 +18,14 @@ sidebar <- dashboardSidebar(
 # Define UI for application that draws a histogram
 body <- dashboardBody(
     tabItems(
-      tabItem(tabName = "exampleSection",
-              fluidPage(
-                box(
-                    "Box content here", br(), "More box content",
-                    sliderInput("bins",
-                                "Number of bins:",
-                                min = 1,
-                                max = 50,
-                                value = 30),
-                    textInput("test", "Text Input:")
-                ),
-    
-                box(
-                    plotOutput("distPlot")
-                )
-              )
-      ),
+      
+      ################################################################################################################################################
+      
+      
+                                                                         # About Page
+      
+      
+      ################################################################################################################################################
       
       tabItem(tabName = "aboutSection",
               fluidPage(
@@ -71,6 +61,14 @@ body <- dashboardBody(
               )
       ),
       
+      ################################################################################################################################################
+      
+      
+                                                                          # EDA Page
+      
+      
+      ################################################################################################################################################
+      
       tabItem(tabName = "EDASection",
               fluidRow(
                 box(width = 4,
@@ -79,19 +77,19 @@ body <- dashboardBody(
                     condition = "input.plotType == 'Box Plot'",
                     radioButtons("plotBoxVar", "Choose Variable for Box Plot", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                               "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                              "Circle2Putting", "ThrowInRate", "OBRate"))
+                                                                              "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Histogram'",
                     radioButtons("plotHistVar", "Choose Variable for Histogram", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                   "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                  "Circle2Putting", "ThrowInRate", "OBRate"))
+                                                                                  "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Scatter Plot'",
                     checkboxGroupInput("plotScatVars", "Choose Variables for Scatter Plot", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                              "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                             "Circle2Putting", "ThrowInRate", "OBRate"))
+                                                                                             "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Bar Plot'",
@@ -104,7 +102,7 @@ body <- dashboardBody(
                     condition = "input.tableType == 'Numeric Summaries'",
                     checkboxGroupInput("tableVars", "Choose Variables to Summarize", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                           "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                          "Circle2Putting", "ThrowInRate", "OBRate")),
+                                                                                          "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
                     checkboxGroupInput("summaries", "Choose Summary Statistics", c("Mean", "Standard Deviation", "Minimum", "Median", "Maximum"))
                   ),
                   conditionalPanel(
@@ -120,7 +118,7 @@ body <- dashboardBody(
                     condition = "input.filterPlotData == 1",
                     radioButtons("filterPlotVar", "Variable to Filter the Plot On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                 "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                "Circle2Putting", "ThrowInRate", "OBRate")),
+                                                                                "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
                     sliderInput("filterPlotCutoff", "Value to Cutoff Plot Data At (In %)", min = 0, max = 100, value = 50),
                     radioButtons("filterPlotDirection", "Filter Plot Data that is Above or Below this Cutoff?", c("Above", "Below"))
                   ),
@@ -128,7 +126,7 @@ body <- dashboardBody(
                     condition = "input.filterTabData == 1",
                     radioButtons("filterTabVar", "Variable to Filter the Table On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                         "Circle2Putting", "ThrowInRate", "OBRate")),
+                                                                                         "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
                     sliderInput("filterTabCutoff", "Value to Cutoff Table Data At (In %)", min = 0, max = 100, value = 50),
                     radioButtons("filterTabDirection", "Filter Table Data that is Above or Below this Cutoff?", c("Above", "Below"))
                   )
@@ -142,10 +140,19 @@ body <- dashboardBody(
               )
       ),
       
+      ################################################################################################################################################
+      
+      
+                                                                       # Modeling Page
+      
+      
+      ################################################################################################################################################
+      
       tabItem(tabName = "modelSection",
         tabsetPanel(
           tabPanel("Modeling Info",
-                      "Boooooop"
+                      h1("About the Models"), br(),
+                   "There are three different types of models that the user will be able to fit on the data.  Not only this, but they will be able to select certain rules for fitting the model as well as which variables to use.  The user will at the end be able to use their fitted model to predict a set of new data that they provide.  The three models that we are going to fit are", strong("a Multiple Linear Regression, a Classification Tree, and a Random Forest"), ""
           ),
           tabPanel("Model Fitting",
                    "beeeeeep"
@@ -156,6 +163,15 @@ body <- dashboardBody(
         )
       ),
       
+      ################################################################################################################################################
+      
+      
+                                                                         # Data Page
+      
+      
+      ################################################################################################################################################
+      
+    
       tabItem(tabName = "dataSection",
         fluidPage(
               titlePanel("2022 Disc Golf Pro Tour Data Set"),
@@ -164,8 +180,10 @@ body <- dashboardBody(
                     checkboxInput("filterDT", "Choose a Variable and Threshold to Filter Data On"),
                     conditionalPanel(
                       condition = "input.filterDT == 1",
-                      radioButtons("filterDTVar", "Variable to Filter On", c("test1", "test2")),
-                      sliderInput("filterDTCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50),
+                      radioButtons("filterDTVar", "Variable to Filter On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
+                      sliderInput("filterDTCutoff", "Value to Cutoff At (In %)", min = 0, max = 1, value = 0.5),
                       radioButtons("filterDTDirection", "Filter Data that is Above or Below this Cutoff?", c("Above", "Below"))
                     )
                 ),
@@ -179,7 +197,7 @@ body <- dashboardBody(
 
 dashboardPage(
   skin = "purple",
-  dashboardHeader(title = "Example Histogram"),
+  dashboardHeader(title = "Disc Golf Data App"),
   sidebar,
   body
 )

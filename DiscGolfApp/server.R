@@ -13,17 +13,6 @@ fullSeason <- read_csv("../2022Season.csv")
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
-    output$distPlot <- renderPlot({
-
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
-
-    })
-    
     output$DGPT <- renderImage({
       list(src = "../DGPT.jpg", width = "60%", height = "60%")
     }, deleteFile = FALSE)
@@ -75,15 +64,21 @@ shinyServer(function(input, output, session) {
       if(input$tableType == "Numeric Summaries"){
         newTabData <- tabData[,c(input$tableVars)]
 
-        dataTab <- newTabData %>% summarize_all(.funs = c(mean = "mean", sd = "sd", min = "min", median = "median", max = "max"))
+        dataTab <- colMeans(newTabData)
       }
       if(input$tableType == "Contingency Table"){
         
       }
-      return(newTabData)
+      return(dataTab)
     })
     
+    ################################################################################################################################################
     
+    
+                                                                          # Modeling Page
+    
+    
+    ################################################################################################################################################
     
     
     
@@ -98,7 +93,8 @@ shinyServer(function(input, output, session) {
     ################################################################################################################################################
     
     output$dataTable <- renderDataTable({
-      fullSeason
+      discData <- fullSeason
+      return(discData)
     })
     
     output$downloadData <- downloadHandler(
