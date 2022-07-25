@@ -108,7 +108,7 @@ shinyServer(function(input, output, session) {
         paste("DiscData.csv")
       },
       content = function(file){
-        write.csv(fullSeason, file, row.names = FALSE)
+        write.csv(newdt, file, row.names = FALSE)
       }
     )
 

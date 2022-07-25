@@ -147,32 +147,42 @@ body <- dashboardBody(
           tabPanel("Model Fitting",
                    fluidRow(
                      box(width = 3,
+                         h3("Universal Model Settings"),
                          sliderInput("dataSplit", "Select Proportion of Data To Send to the Training Set", min = 0.5, max = 0.95, value = 0.8),
+                         sliderInput("folds", "Select How Many Folds to Use for Cross Validation", min = 1, max = 10, value = 5)
                          ),
                      box(width = 3,
                          h3("MLR Settings"),
                          checkboxGroupInput("MLRVars", "Select the Variables To Use In MLR Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                                      "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                                     "Circle2Putting", "ThrowInRate", "OBRate"))
+                                                                                                     "Circle2Putting", "ThrowInRate", "OBRate")),
+                         checkboxInput("interaction", "Include Interaction Terms in Model?", value = FALSE)
                          
                          ),
                      box(width = 3,
                          h3("Regression Tree Settings"),
                          checkboxGroupInput("treeVars", "Select the Variables To Use In the Tree Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                                      "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                                     "Circle2Putting", "ThrowInRate", "OBRate"))
-                         
+                                                                                                     "Circle2Putting", "ThrowInRate", "OBRate")),
+                         h5("Adjust the Complexity Parameter Values to Try"), br(),
+                         "This determines how much improvement is need in the error at each node.  It essentially controls how many nodes the model has at the end.  We can choose a range of values to try and cross-validation will help us choose the best one.  The inputs below are min, max, and step size.  For example, if min = 0, max = 0.1, and step size = 0.001.  It will try values 0, 0.001, 0.002, 0.003, ..., 0.098, 0.099, 0.1.",
+                         numericInput("cpMin", "Set Minimum cp Value to Try", value = 0),
+                         numericInput("cpMax", "Set Maximum cp Value to Try", value = 0.1),
+                         numericInput("cpStep", "Set cp Step Size", value = 0.001)
                          
                          ),
                      box(width = 3,
                          h3("Random Forest Settings"),
                          checkboxGroupInput("rfVars", "Select the Variables To Use In the Tree Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
-                                                                                                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting"                                                                                                           , "Circle2Putting", "ThrowInRate", "OBRate"))
-                         
-                         ),
-                     actionButton("fit", "Click Here When Ready To Fit Models"), br(),
-                     "Put Progress Bar Here"
-                   )
+                                                                                                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting"                                                                                                           , "Circle2Putting", "ThrowInRate", "OBRate")),
+                         h5("Adjust the Parameter That Determines the Number of Variables To Randomly Subset To"), br(),
+                         "We can again use cross-validation to help us determine how many variable to subset to (m).  We can choose a range of values to try from our 12 predictors.",
+                         numericInput("mMin", "Set Minimum m Value to Try", value = 1),
+                         numericInput("mMax", "Set Maximum cp Value to Try", value = 12)
+                         )
+                   ),
+                   actionButton("fit", "Click Here When Ready To Fit Models"), br(),
+                   "Put Progress Bar Here"
           ),
           tabPanel("Prediction",
                     fluidRow(
