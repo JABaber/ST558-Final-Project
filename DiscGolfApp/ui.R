@@ -72,7 +72,7 @@ body <- dashboardBody(
       tabItem(tabName = "EDASection",
               fluidRow(
                 box(width = 4,
-                  selectInput("plotType", "Select Plot Type", choices = c("Box Plot", "Histogram", "Scatter Plot", "Bar Plot")),
+                  selectInput("plotType", "Select Plot Type", choices = c("Box Plot", "Histogram", "Scatter Plot")),
                   conditionalPanel(
                     condition = "input.plotType == 'Box Plot'",
                     radioButtons("plotBoxVar", "Choose Variable for Box Plot", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
@@ -83,53 +83,37 @@ body <- dashboardBody(
                     condition = "input.plotType == 'Histogram'",
                     radioButtons("plotHistVar", "Choose Variable for Histogram", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                   "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                  "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
+                                                                                  "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
+                    numericInput("bins", "Set Number of Bins", value = 30)
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Scatter Plot'",
                     checkboxGroupInput("plotScatVars", "Choose Variables for Scatter Plot", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                              "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                             "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
-                  ),
-                  conditionalPanel(
-                    condition = "input.plotType == 'Bar Plot'",
-                    radioButtons("plotBarVar", "Choose Variable for Bar Plot", c("test1", "test2"))
+                                                                                             "Circle2Putting", "ThrowInRate", "OBRate", "Points"),
+                                       selected = c("Circle1XPutting", "Points"))
                   )
                 ),
                 box(width = 4,
-                  selectInput("tableType", "Select Table Type", choices = c("Numeric Summaries", "Contingency Table")),
-                  conditionalPanel(
-                    condition = "input.tableType == 'Numeric Summaries'",
-                    checkboxGroupInput("tableVars", "Choose Variables to Summarize", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    checkboxGroupInput("tableVars", "Choose Variables to Summarize In Table (Choose At Least 2)", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                           "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                          "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
-                    checkboxGroupInput("summaries", "Choose Summary Statistics", c("Mean", "Standard Deviation", "Minimum", "Median", "Maximum"))
-                  ),
-                  conditionalPanel(
-                    condition = "input.tableType == 'Contingency Table'",
-                    radioButtons("tableVar", "Choose Variable to Count Players Above Or Below a Certain Threshold", c("test1", "test2")),
-                    sliderInput("countsCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50)
-                  )
+                                                                                          "Circle2Putting", "ThrowInRate", "OBRate", "Points"),
+                                       selected = c("Birdie", "Circle1XPutting")),
+                    checkboxGroupInput("summaries", "Choose Summary Statistics", choiceNames = c("Mean", "Standard Deviation", "Minimum", "Median", "Maximum"),
+                                       choiceValues = c("mean", "sd", "min", "median", "max"),
+                                       selected = c("mean", "sd", "min", "median", "max"))
                 ),
                 box(width = 4,
-                  checkboxInput("filterPlotData", "Choose a Variable and Threshold to Filter Data For the Plot On"),
-                  checkboxInput("filterTabData", "Choose a Variable and Threshold to Filter Data For the Summary Table On"),
-                  conditionalPanel(
-                    condition = "input.filterPlotData == 1",
-                    radioButtons("filterPlotVar", "Variable to Filter the Plot On", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
-                                                                                "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
-                    sliderInput("filterPlotCutoff", "Value to Cutoff Plot Data At (In %)", min = 0, max = 100, value = 50),
-                    radioButtons("filterPlotDirection", "Filter Plot Data that is Above or Below this Cutoff?", c("Above", "Below"))
-                  ),
-                  conditionalPanel(
-                    condition = "input.filterTabData == 1",
-                    radioButtons("filterTabVar", "Variable to Filter the Table On", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
-                                                                                         "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                         "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
-                    sliderInput("filterTabCutoff", "Value to Cutoff Table Data At (In %)", min = 0, max = 100, value = 50),
-                    radioButtons("filterTabDirection", "Filter Table Data that is Above or Below this Cutoff?", c("Above", "Below"))
-                  )
+                    checkboxInput("filterPlotData", "Filter Players Based on Rank in Plot", value = FALSE),
+                    checkboxInput("filterTabData", "Filter Players Based on Rank in Summaries", value = FALSE),
+                    conditionalPanel(
+                      condition = "input.filterPlotData == 1",
+                      numericInput("filterPlotRank", "Select Top X Players for Plot", value = 420, min = 1, max = 420),
+                    ),
+                    conditionalPanel(
+                      condition = "input.filterTabData == 1",
+                      numericInput("filterTabRank", "Select Top X Players for Summaries", value = 420, min = 1, max = 420)
+                    )
                 ),
                 box(
                   plotOutput("EDAPlot")
@@ -211,24 +195,25 @@ body <- dashboardBody(
       
     
       tabItem(tabName = "dataSection",
-        fluidPage(
-              titlePanel("2022 Disc Golf Pro Tour Data Set"),
-              mainPanel(
+        fluidRow(
                 box(width = 4,
-                    checkboxInput("filterDT", "Choose a Variable and Threshold to Filter Data On"),
+                    checkboxInput("filterDT", "Filter Players Based on Rank", value = FALSE),
                     conditionalPanel(
                       condition = "input.filterDT == 1",
-                      radioButtons("filterDTVar", "Variable to Filter On", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
-                                                                                "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
-                                                                                "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
-                      sliderInput("filterDTCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50),
-                      radioButtons("filterDTDirection", "Filter Data that is Above or Below this Cutoff?", c("Above", "Below"))
+                      numericInput("filterDTRank", "Select Top X Players", value = 420, min = 1, max = 420)
+                      ),
+                    ),
+                box(width = 4,
+                    checkboxGroupInput("DTVars", "Choose Columns To View/Save", choices = c("Place", "Name", "Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                            "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                            "Circle2Putting", "ThrowInRate", "OBRate", "Points"),
+                                       selected = c("Place", "Name", "Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                    "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                    "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                     )
                 ),
                 dataTableOutput("dataTable"),
                 downloadButton("downloadData", "Download")
-                )
-              )
       )
   )
 )

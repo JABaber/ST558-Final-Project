@@ -8,6 +8,7 @@ library(tidyverse)
 library(GGally)
 library(DT)
 library(caret)
+library(psych)
 
 fullSeason <- read_csv("../2022Season.csv")
 
@@ -27,50 +28,44 @@ shinyServer(function(input, output, session) {
     
     ################################################################################################################################################
     
-    output$EDAPlot <- renderPlot({
-      plotData <- fullSeason
+    filterPlotData <- reactive({
       if(input$filterPlotData){
-        if(input$filterPlotDirection == "Above"){
-          plotData <- plotData %>% filter(!!sym(input$filterPlotVar) > input$filterPlotCutoff)
-        }
-        else if(input$filterPlotDirection == "Below"){
-          plotData <- plotData %>% filter(!!sym(input$filterPlotVar) <= input$filterPlotCutoff)
-        }
+        discData <- fullSeason %>% filter(Place <= input$filterPlotRank)
       }
+      else{
+        discData <- fullSeason
+      }
+    })
+    
+    filterTabData <- reactive({
+      if(input$filterTabData){
+        discData <- fullSeason %>% filter(Place <= input$filterTabRank)
+      }
+      else{
+        discData <- fullSeason
+      }
+    })
+    
+    output$EDAPlot <- renderPlot({
       if(input$plotType == 'Box Plot'){
-        dataPlot <- ggplot(data = plotData, aes_string(x = input$plotBoxVar)) + geom_boxplot()
+        dataPlot <- ggplot(data = filterPlotData(), aes_string(x = input$plotBoxVar)) + geom_boxplot()
       }
       else if(input$plotType == 'Histogram'){
-        dataPlot <- ggplot(data = plotData, aes_string(x = input$plotHistVar)) + geom_histogram()
-      }
-      else if(input$plotType == "Bar Plot"){
-        dataPlot <- ggplot() + geom_bar()
+        dataPlot <- ggplot(data = filterPlotData(), aes_string(x = input$plotHistVar)) + geom_histogram(bins = input$bins)
       }
       else if(input$plotType == "Scatter Plot"){
+        plotData <- filterPlotData()
         dataPlot <- ggpairs(data = plotData[,c(input$plotScatVars)])
       }
       return(dataPlot)
     })
     
     output$EDATable <- renderDataTable({
-      tabData <- fullSeason
-      if(input$filterTabData){
-        if(input$filterTabDirection == "Above"){
-          tabData <- plotData %>% filter(input$filterTabVar > input$filterTabCutoff)
-        }
-        else if(input$filterDirection == "Below"){
-          tabData <- plotData %>% filter(input$filterTabVar <= input$filterTabCutoff)
-        }
-      }
-      if(input$tableType == "Numeric Summaries"){
-        newTabData <- tabData[,c(input$tableVars)]
-
-        dataTab <- colMeans(newTabData)
-      }
-      if(input$tableType == "Contingency Table"){
-        
-      }
-      return(dataTab)
+      tabData <- filterTabData()
+      newTabData <- tabData[,c(input$tableVars)]
+      discSummary <- describe(newTabData)
+      newDiscSummary <- round(discSummary[,c(input$summaries)], digits = 4)
+      return(newDiscSummary)
     })
     
     ################################################################################################################################################
@@ -93,9 +88,19 @@ shinyServer(function(input, output, session) {
     
     ################################################################################################################################################
     
+    filterDTData <- reactive({
+      if(input$filterDT){
+        discData <- fullSeason %>% filter(Place <= input$filterDTRank)
+      }
+      else{
+        discData <- fullSeason
+      }
+    })
+    
     output$dataTable <- renderDataTable({
-      discData <- fullSeason
-      return(discData)
+      dt <- filterDTData()
+      newdt <- dt[,c(input$DTVars)]
+      return(newdt)
     })
     
     output$downloadData <- downloadHandler(
