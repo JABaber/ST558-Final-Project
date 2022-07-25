@@ -77,6 +77,55 @@ shinyServer(function(input, output, session) {
     ################################################################################################################################################
     
     
+    observeEvent(input$fit, {
+      
+      split <- createDataPartition(fullSeason$Points, p = input$dataSplit, list = FALSE)
+      trainScores <- fullSeason[split,]
+      testScores <- fullSeason[-split,]
+      
+      mlrTrain <- trainScores[,c(input$MLRVars, "Points")]
+      mlrTest <- testScores[,c(input$MLRVars, "Points")]
+      
+      treeTrain <- trainScores[,c(input$treeVars, "Points")]
+      treeTest <- testScores[,c(input$treeVars, "Points")]
+      
+      rfTrain <- trainScores[,c(input$rfVars, "Points")]
+      rfTest <- testScores[,c(input$rfVars, "Points")]
+      
+      mlrNames <- paste0(input$MLRVars, collapse = "+")
+      treeNames <- paste0(input$treeVars, collapse = "+")
+      rfNames <- paste0(input$rfVars, collapse = "+")
+      response <- "Points"
+      
+      if(input$interaction){
+        intNames <- paste0("(", mlrNames, ")^2")
+        MLR <- train(as.formula(paste(response, intNames, sep = " ~ ")),
+                               data = mlrTrain, method = "lm", 
+                               trControl = trainControl(method = "cv", number = input$folds),
+                               preProcess = c("center", "scale"))
+      }
+      else{
+        MLR <- train(as.formula(paste(response, mlrNames, sep = " ~ ")),
+                     data = mlrTrain, method = "lm", 
+                     trControl = trainControl(method = "cv", number = input$folds),
+                     preProcess = c("center", "scale"))
+      }
+      
+      regTree <- train(as.formula(paste(response, treeNames, sep = " ~ ")),
+                       data = treeTrain, method = "rpart",
+                       trControl = trainControl(method = "cv", number = input$folds),
+                       preProcess = c("center", "scale"),
+                       tuneGrid = expand.grid(cp = seq(from = input$cpMin, to = input$cpMax, by = input$cpStep)))
+      
+      rf <- train(as.formula(paste(response, rfNames, sep = " ~ ")), data = rfTrain, method = "rf",
+                  trControl = trainControl(method = "cv", number = input$folds),
+                  preProcess = c("center", "scale"),
+                  tuneGrid = expand.grid(mtry = c(input$mMin : input$mMax)))
+      output$RMSEs <- renderDataTable({
+        tibble(MLR$results$RMSE, min(regTree$results$RMSE), min(rf$results$RMSE))
+      })
+      
+    })
     
     
     
