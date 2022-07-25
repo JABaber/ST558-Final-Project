@@ -7,6 +7,7 @@ library(shiny)
 library(tidyverse)
 library(GGally)
 library(DT)
+library(caret)
 
 fullSeason <- read_csv("../2022Season.csv")
 
@@ -30,10 +31,10 @@ shinyServer(function(input, output, session) {
       plotData <- fullSeason
       if(input$filterPlotData){
         if(input$filterPlotDirection == "Above"){
-          plotData <- plotData %>% filter(noquote(input$filterPlotVar) > input$filterPlotCutoff)
+          plotData <- plotData %>% filter(!!sym(input$filterPlotVar) > input$filterPlotCutoff)
         }
         else if(input$filterPlotDirection == "Below"){
-          plotData <- plotData %>% filter(noquote(input$filterPlotVar) <= input$filterPlotCutoff)
+          plotData <- plotData %>% filter(!!sym(input$filterPlotVar) <= input$filterPlotCutoff)
         }
       }
       if(input$plotType == 'Box Plot'){

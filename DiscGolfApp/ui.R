@@ -72,22 +72,22 @@ body <- dashboardBody(
       tabItem(tabName = "EDASection",
               fluidRow(
                 box(width = 4,
-                  selectInput("plotType", "Select Plot Type", choices = list("Box Plot", "Histogram", "Scatter Plot", "Bar Plot")),
+                  selectInput("plotType", "Select Plot Type", choices = c("Box Plot", "Histogram", "Scatter Plot", "Bar Plot")),
                   conditionalPanel(
                     condition = "input.plotType == 'Box Plot'",
-                    radioButtons("plotBoxVar", "Choose Variable for Box Plot", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    radioButtons("plotBoxVar", "Choose Variable for Box Plot", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                               "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                               "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Histogram'",
-                    radioButtons("plotHistVar", "Choose Variable for Histogram", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    radioButtons("plotHistVar", "Choose Variable for Histogram", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                   "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                   "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                   ),
                   conditionalPanel(
                     condition = "input.plotType == 'Scatter Plot'",
-                    checkboxGroupInput("plotScatVars", "Choose Variables for Scatter Plot", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    checkboxGroupInput("plotScatVars", "Choose Variables for Scatter Plot", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                              "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                              "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                   ),
@@ -100,7 +100,7 @@ body <- dashboardBody(
                   selectInput("tableType", "Select Table Type", choices = c("Numeric Summaries", "Contingency Table")),
                   conditionalPanel(
                     condition = "input.tableType == 'Numeric Summaries'",
-                    checkboxGroupInput("tableVars", "Choose Variables to Summarize", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    checkboxGroupInput("tableVars", "Choose Variables to Summarize", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                           "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                           "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
                     checkboxGroupInput("summaries", "Choose Summary Statistics", c("Mean", "Standard Deviation", "Minimum", "Median", "Maximum"))
@@ -116,7 +116,7 @@ body <- dashboardBody(
                   checkboxInput("filterTabData", "Choose a Variable and Threshold to Filter Data For the Summary Table On"),
                   conditionalPanel(
                     condition = "input.filterPlotData == 1",
-                    radioButtons("filterPlotVar", "Variable to Filter the Plot On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    radioButtons("filterPlotVar", "Variable to Filter the Plot On", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                 "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                 "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
                     sliderInput("filterPlotCutoff", "Value to Cutoff Plot Data At (In %)", min = 0, max = 100, value = 50),
@@ -124,7 +124,7 @@ body <- dashboardBody(
                   ),
                   conditionalPanel(
                     condition = "input.filterTabData == 1",
-                    radioButtons("filterTabVar", "Variable to Filter the Table On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    radioButtons("filterTabVar", "Variable to Filter the Table On", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                          "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
                     sliderInput("filterTabCutoff", "Value to Cutoff Table Data At (In %)", min = 0, max = 100, value = 50),
@@ -152,13 +152,51 @@ body <- dashboardBody(
         tabsetPanel(
           tabPanel("Modeling Info",
                       h1("About the Models"), br(),
-                   "There are three different types of models that the user will be able to fit on the data.  Not only this, but they will be able to select certain rules for fitting the model as well as which variables to use.  The user will at the end be able to use their fitted model to predict a set of new data that they provide.  The three models that we are going to fit are", strong("a Multiple Linear Regression, a Classification Tree, and a Random Forest"), ""
+                   "There are three different types of models that the user will be able to fit on the data.  Not only this, but they will be able to select certain rules for fitting the model as well as which variables to use.  The user will at the end be able to use their fitted model to predict a set of new data that they provide.  The three models that we are going to fit are", strong("a Multiple Linear Regression, a Regression Tree, and a Random Forest."), "I will describe them in more detail below:",
+                   tags$ul(
+                     tags$li(strong("Multiple Linear Regression"), "- uses a linear combination of predictors in an equation to predict the response variable, which is a continuous numeric variable.", strong("insert equation here"), "the values for these coefficients are found using linear algebra to find the solution of Beta values that minimize the sum of squared residuals.", strong("insert next equation here"), "These beta coefficients can be interpreted as the change in the response value for a one unit increase in the predictor x.  Multiple Linear Regression can also feature polynomial and interaction terms.  A polynomial term is simply when we raise a predictor's x value in that equation to some power other than 1.  An interaction term takes the product of two Xs (predictors) and finds a beta coefficient for that product.  This complicates the interpretation a bit, but essentially the beta represents the change in the response variable when we increase the product of two predictors by 1, which represents the effect they have on each other as well as the response.  The Multiple Linear Regression model is usually quick to solve with a computer and is one of the older prediction models around.  It has plenty of extensions that can improve prediction power or predictor selection.  The major downside of this type of model is that they require some pretty strong assumptions to be made about the data, most of which are usually not true.  These assumptions include having normally distributed errors with equal variances across all values of independent variables and a lack of collinearity (or correlation) between predictors.  Most of the time, these are stretches to assume, but when it is relatively safe to assume they are true, or it can be proven, the Multiple Linear Regression model can be a great, somewhat easy to interpret choice."),
+                     tags$li(strong("Regression Tree"), "- evalutates at every possible value of each predictor and performs some measure of error, usually the Residual Sum of Squares like in Multiple Linear Regression.  It chooses the value that minimizes the error and creates a split there.  A split essentially just divides the data into two groups, and the algorithm again will continue to look for splits in these groups based on the predictors and so on.  Many splits may be done, leading to many branches for the data to fall into.  The Regression Tree model will eventually create too many of these branches, which can lead to overfitting.  This essentially makes the model really good at predicting for the data that it was trained on, but really bad at predicting new data.  The model then prunes itself back to a reasonable amount of splits/branches.  The statistician fitting these models can decide how many groups they want in the end, which determines how far the model prunes itself back.  An advantage of the Regression Tree is that it is super easy to interpret, you just follow the line for a data point down the branches to a prediction.  The first few splits usually make sense intuitively as well.  They are also pretty quick to fitting with a computer.  The major disadvantage of these models is that they can be heavily biased towards the data they were trained on.  Small changes in the data may lead to huge differences in splits.  They might create a few splits, and those splits are good for the data they used but not for new data.  They also suffer heavily from collinearity between predictors.  If two or more predictors are highly correlated, they might create bad splits or lead to less information obtained from the data, however, this will not affect prediction as much."),
+                     tags$li(strong("Random Forest"), "- is essentially an average of many, many regression trees.  It creates random (bootstrapped) samples from the data and fits a tree to each of these samples.  It then averages across all of these trees to find optimal splits that are more reliable and less variant than had a single tree been fit.  When predicting, the Random Forest model predicts the mean of predictions across all models.  The Random Forest, however, does one more major step.  Had it used the process I just described, if there existed a really strong predictor then many of the trees would create an early split using the predictor at similar values.  This can result in an omission of much of the information that comes from the other predictors, since they won't be as likely to get a split.  The Random Forest circumvents this by randomly subsetting the predictors every time it fits a tree.  The statistician fitting the model is responsible for deciding how many predictors to use each time, or may use cross-validation to decide.  The advantage of this is that it can get more even splits for prediction, largely avoiding collinearity.  This leads to better overall predictions with fewer assumptions compared to the Multiple Linear Regression model.  However, this process can take an extremely long time to run, especially with cross-validation.  For large data sets that have tons of observations and tons of predictors, this may end up taking too long to fit.")
+                   )
           ),
+          
           tabPanel("Model Fitting",
-                   "beeeeeep"
+                   fluidRow(
+                     box(width = 3,
+                         sliderInput("dataSplit", "Select Proportion of Data To Send to the Training Set", min = 0.5, max = 0.95, value = 0.8),
+                         ),
+                     box(width = 3,
+                         h3("MLR Settings"),
+                         checkboxGroupInput("MLRVars", "Select the Variables To Use In MLR Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                                     "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                                     "Circle2Putting", "ThrowInRate", "OBRate"))
+                         
+                         ),
+                     box(width = 3,
+                         h3("Regression Tree Settings"),
+                         checkboxGroupInput("treeVars", "Select the Variables To Use In the Tree Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                                     "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                                                                                                     "Circle2Putting", "ThrowInRate", "OBRate"))
+                         
+                         
+                         ),
+                     box(width = 3,
+                         h3("Random Forest Settings"),
+                         checkboxGroupInput("rfVars", "Select the Variables To Use In the Tree Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                                                                                                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting"                                                                                                           , "Circle2Putting", "ThrowInRate", "OBRate"))
+                         
+                         ),
+                     actionButton("fit", "Click Here When Ready To Fit Models"), br(),
+                     "Put Progress Bar Here"
+                   )
           ),
           tabPanel("Prediction",
-                    "bam"
+                    fluidRow(
+                      box(width = 4,
+                          radioButtons("predModel", "Choose A Model To Use For Prediction", c("Multiple Linear Regression", "Regression Tree", "Random Forest")),
+                          ), br(),
+                      "Choose Predictor Values"
+                    )
           )
         )
       ),
@@ -180,7 +218,7 @@ body <- dashboardBody(
                     checkboxInput("filterDT", "Choose a Variable and Threshold to Filter Data On"),
                     conditionalPanel(
                       condition = "input.filterDT == 1",
-                      radioButtons("filterDTVar", "Variable to Filter On", list("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                      radioButtons("filterDTVar", "Variable to Filter On", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                 "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                 "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
                       sliderInput("filterDTCutoff", "Value to Cutoff At (In %)", min = 0, max = 100, value = 50),

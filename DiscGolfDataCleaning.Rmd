@@ -53,6 +53,8 @@ colnames(points) <- c("Name", "Points")
 ```{r}
 fullSeason <- left_join(fullSeason, points, by = c("Name" = "Name"))
 fullSeason$Points <- as.numeric(fullSeason$Points)
+fullSeason$OBRate <- fullSeason$OBRate*100
+fullSeason$ThrowInRate <- fullSeason$ThrowInRate*100
 ```
 
 ```{r}
