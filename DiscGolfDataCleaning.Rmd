@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(psych)
 ```
 
 ```{r}
@@ -76,5 +77,51 @@ colMeans(scoresData)
 
 ```{r}
 scoresData %>% colMeans()
+```
+
+```{r}
+split <- createDataPartition(scoresData$Points, p = 0.8, list = FALSE)
+trainScores <- scoresData[split,]
+testScores <- scoresData[-split,]
+```
+
+```{r}
+varnames <- paste0(c("Birdie", "Par", "Bogey", "Fairway", "Parked", "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
+                        "Circle2Putting", "ThrowInRate", "OBRate"), collapse = "+")
+squaredvarnames <- paste0("(", varnames, ")^2")
+response <- "Points"
+mlr <- train(as.formula(paste(response, varnames, sep = " ~ ")),
+             data = trainScores, method = "lm", 
+             trControl = trainControl(method = "repeatedcv", number = 5, repeats = 3),
+             preProcess = c("center", "scale"))
+intMLR <- mlr <- train(as.formula(paste(response, squaredvarnames, sep = " ~ ")),
+             data = trainScores, method = "lm", 
+             trControl = trainControl(method = "repeatedcv", number = 5, repeats = 3),
+             preProcess = c("center", "scale"))
+```
+
+```{r}
+regTree <- train(as.formula(paste(response, varnames, sep = " ~ ")),
+                 data = trainScores, method = "rpart",
+                 trControl = trainControl(method = "repeatedcv", number = 5, repeats = 3),
+                 preProcess = c("center", "scale"),
+                 tuneGrid = expand.grid(cp = seq(from = 0, to = 0.1, by = 0.001)))
+```
+
+```{r}
+rf <- train(as.formula(paste(response, varnames, sep = " ~ ")), data = trainScores, method = "rf",
+                        # Perform 5 fold cross validation repeated 3 times
+                        trControl = trainControl(method = "repeatedcv", number = 5, repeats = 3),
+                        # Standardize the data
+                        preProcess = c("center", "scale"),
+                        # Check all possible m values from 1 to 15
+                        tuneGrid = expand.grid(mtry = c(1:12)))
+```
+
+```{r}
+data.frame(mlr$results$RMSE,
+intMLR$results$RMSE,
+min(regTree$results$RMSE),
+min(rf$results$RMSE))
 ```
 
