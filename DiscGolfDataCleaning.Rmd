@@ -12,6 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(psych)
+library(rpart)
+library(randomForest)
+library(rattle)
 ```
 
 ```{r}
@@ -115,7 +118,8 @@ rf <- train(as.formula(paste(response, varnames, sep = " ~ ")), data = trainScor
                         # Standardize the data
                         preProcess = c("center", "scale"),
                         # Check all possible m values from 1 to 15
-                        tuneGrid = expand.grid(mtry = c(1:12)))
+                        tuneGrid = expand.grid(mtry = c(1:12)),
+                        importance = TRUE)
 ```
 
 ```{r}
@@ -124,4 +128,36 @@ intMLR$results$RMSE,
 min(regTree$results$RMSE),
 min(rf$results$RMSE))
 ```
+
+```{r}
+imp<-varImp(rf)
+imp$importance
+```
+
+```{r}
+mlrPred <- predict(mlr, newdata = testScores)
+regTreePred <- predict(regTree, newdata = testScores)
+rfPred <- predict(rf, newdata = testScores)
+errorTab <- data.frame(
+postResample(mlrPred, obs = testScores$Points),
+postResample(regTreePred, obs = testScores$Points),
+postResample(rfPred, obs = testScores$Points)
+)
+colnames(errorTab) <- c("MLR", "RegTree", "RandomForest")
+errorTab
+```
+
+```{r}
+mlrNew <- train(Points ~ Bogey + Circle1XPutting + OBRate,
+             data = trainScores, method = "lm", 
+             trControl = trainControl(method = "repeatedcv", number = 5, repeats = 3),
+             preProcess = c("center", "scale"))
+```
+
+```{r}
+plot(regTree$finalModel)
+text(regTree$finalModel)
+```
+
+
 
