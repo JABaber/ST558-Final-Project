@@ -9,6 +9,9 @@ library(GGally)
 library(DT)
 library(caret)
 library(psych)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
 
 fullSeason <- read_csv("../2022Season.csv")
 
@@ -76,7 +79,6 @@ shinyServer(function(input, output, session) {
     
     ################################################################################################################################################
     
-    
     observeEvent(input$fit, {
       
       split <- createDataPartition(fullSeason$Points, p = input$dataSplit, list = FALSE)
@@ -99,32 +101,92 @@ shinyServer(function(input, output, session) {
       
       if(input$interaction){
         intNames <- paste0("(", mlrNames, ")^2")
-        MLR <- train(as.formula(paste(response, intNames, sep = " ~ ")),
+        MLR <<- train(as.formula(paste(response, intNames, sep = " ~ ")),
                                data = mlrTrain, method = "lm", 
                                trControl = trainControl(method = "cv", number = input$folds),
                                preProcess = c("center", "scale"))
       }
       else{
-        MLR <- train(as.formula(paste(response, mlrNames, sep = " ~ ")),
+        MLR <<- train(as.formula(paste(response, mlrNames, sep = " ~ ")),
                      data = mlrTrain, method = "lm", 
                      trControl = trainControl(method = "cv", number = input$folds),
                      preProcess = c("center", "scale"))
       }
       
-      regTree <- train(as.formula(paste(response, treeNames, sep = " ~ ")),
+      regTree <<- train(as.formula(paste(response, treeNames, sep = " ~ ")),
                        data = treeTrain, method = "rpart",
                        trControl = trainControl(method = "cv", number = input$folds),
                        preProcess = c("center", "scale"),
                        tuneGrid = expand.grid(cp = seq(from = input$cpMin, to = input$cpMax, by = input$cpStep)))
       
-      rf <- train(as.formula(paste(response, rfNames, sep = " ~ ")), data = rfTrain, method = "rf",
+      RF <<- train(as.formula(paste(response, rfNames, sep = " ~ ")), data = rfTrain, method = "rf",
                   trControl = trainControl(method = "cv", number = input$folds),
                   preProcess = c("center", "scale"),
                   tuneGrid = expand.grid(mtry = c(input$mMin : input$mMax)))
+      
       output$RMSEs <- renderDataTable({
-        tibble(MLR$results$RMSE, min(regTree$results$RMSE), min(rf$results$RMSE))
+        RMSETable <- tibble(MLR$results$RMSE, min(regTree$results$RMSE), min(RF$results$RMSE))
+        colnames(RMSETable) <- c("MLR", "RegressionTree", "RandomForest")
+        RMSETable <- round(RMSETable, digits = 4)
+        return(RMSETable)
       })
       
+      output$MLRfit <- renderPrint({
+        summary(MLR)
+      })
+      
+      output$treePlot <- renderPlot({
+        rpart.plot(regTree$finalModel)
+      })
+      
+      output$importance <- renderDataTable({
+        varImp(RF)$importance
+      })
+      
+      output$testFit <- renderDataTable({
+        mlrPred <- predict(MLR, newdata = mlrTest)
+        regTreePred <- predict(regTree, newdata = treeTest)
+        rfPred <- predict(RF, newdata = rfTest)
+        errorTab <- data.frame(
+          postResample(mlrPred, obs = mlrTest$Points),
+          postResample(regTreePred, obs = treeTest$Points),
+          postResample(rfPred, obs = rfTest$Points)
+        )
+        colnames(errorTab) <- c("MLR", "RegTree", "RandomForest")
+        return(errorTab)
+      })
+    })
+    
+    observeEvent(input$predict, {
+      
+      predData <- reactive({
+        data.frame(Birdie = input$predBirdie,
+                   Par = input$predPar,
+                   Bogey = input$predBogey,
+                   Fairway = input$predFairway,
+                   Parked = input$predParked,
+                   Circle1InReg = input$predCircle1InReg,
+                   Circle2InReg = input$predCircle2InReg,
+                   Scramble = input$predScramble,
+                   Circle1XPutting = input$predCircle1XPutting,
+                   Circle2Putting = input$predCircle2Putting,
+                   ThrowInRate = input$predThrowInRate,
+                   OBRate = input$predOBRate)
+      })
+      
+      predictedPoints <- reactive({
+        if(input$predModel == "Multiple Linear Regression"){
+          predict(MLR, predData())
+        }
+        else if(input$predModel == "Regression Tree"){
+          predict(regTree, predData())
+        }
+        else if(input$predModel == "Random Forest"){
+          predict(RF, predData())
+        }
+      })
+      
+      output$PointsPrediction <- renderPrint(predictedPoints())
     })
     
     

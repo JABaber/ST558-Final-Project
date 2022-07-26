@@ -187,21 +187,52 @@ body <- dashboardBody(
                          h5(strong("Adjust the Parameter That Determines the Number of Variables To Randomly Subset To")), br(),
                          "We can again use cross-validation to help us determine how many variable to subset to (m).  We can choose a range of values to try from our 12 predictors.",
                          numericInput("mMin", "Set Minimum m Value to Try", value = 1),
-                         numericInput("mMax", "Set Maximum cp Value to Try", value = 12)
+                         numericInput("mMax", "Set Maximum m Value to Try", value = 12)
                          )
                    ),
-                   actionButton("fit", "Click Here When Ready To Fit Models"), br(),
+                   actionButton("fit", "Click Here When Ready To Fit Models"), 
                    "Put Progress Bar Here",
-                   box(
-                     dataTableOutput("RMSEs")
-                   )
+                   fluidRow(
+                    box(width = 3,
+                      h2("Training Set RMSEs of Each Model"),
+                      dataTableOutput("RMSEs")
+                    ),
+                    box(width = 3,
+                        h2("MLR Fit and Coefficients"),
+                        verbatimTextOutput("MLRfit")
+                    ),
+                    box(width = 3,
+                        h2("Plot of Regression Tree"),
+                        plotOutput("treePlot")
+                    ),
+                    box(width = 3,
+                        h2("Variable Importance from Random Forest"),
+                        dataTableOutput("importance")
+                    )
+                   ),
+                   h2("Testing Set Fit Diagnostics of Each Model"),
+                   dataTableOutput("testFit")
           ),
           tabPanel("Prediction",
                     fluidRow(
                       box(width = 4,
                           radioButtons("predModel", "Choose A Model To Use For Prediction", c("Multiple Linear Regression", "Regression Tree", "Random Forest")),
-                          ), br(),
-                      "Choose Predictor Values"
+                          h2("Set Values (In %) For Each Predictor That You Selected In the Chosen Model"),  "The other values will not effect your prediction so you can leave them be",
+                          numericInput("predBirdie", "Birdie", value = 50, min = 0, max = 100),
+                          numericInput("predPar", "Par", value = 50, min = 0, max = 100),
+                          numericInput("predBogey", "Bogey", value = 50, min = 0, max = 100),
+                          numericInput("predFairway", "Fairway", value = 50, min = 0, max = 100),
+                          numericInput("predParked", "Parked", value = 50, min = 0, max = 100),
+                          numericInput("predCircle1InReg", "Circle1InReg", value = 50, min = 0, max = 100),
+                          numericInput("predCircle2InReg", "Circle2InReg", value = 50, min = 0, max = 100),
+                          numericInput("predScramble", "Scramble", value = 50, min = 0, max = 100),
+                          numericInput("predCircle1XPutting", "Circle1XPutting", value = 50, min = 0, max = 100),
+                          numericInput("predCircle2Putting", "Circle2Putting", value = 50, min = 0, max = 100),
+                          numericInput("predThrowInRate", "ThrowInRate", value = 50, min = 0, max = 100),
+                          numericInput("predOBRate", "OBRate", value = 50, min = 0, max = 100)
+                      ),
+                      actionButton("predict", "Click Here When Ready To Predict"),
+                      verbatimTextOutput("PointsPrediction")
                     )
           )
         )
