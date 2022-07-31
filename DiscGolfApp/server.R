@@ -234,25 +234,21 @@ shinyServer(function(input, output, session) {
     
     filterDTData <- reactive({
       if(input$filterDT){
-        discData <- fullSeason %>% filter(Place <= input$filterDTRank)
+        discData <- fullSeason %>% filter(Place <= input$filterDTRank) %>% select(c(input$DTVars))
       }
       else{
-        discData <- fullSeason
+        discData <- fullSeason %>% select(c(input$DTVars))
       }
     })
     
     output$dataTable <- renderDataTable({
-      dt <- filterDTData()
-      newdt <- dt[,c(input$DTVars)]
-      return(newdt)
+      filterDTData()
     })
     
     output$downloadData <- downloadHandler(
-      filename = function(){
-        paste("DiscData.csv")
-      },
+      filename = "DiscData.csv",
       content = function(file){
-        write.csv(newdt, file, row.names = FALSE)
+        write.csv(filterDTData(), file, row.names = FALSE)
       }
     )
 
