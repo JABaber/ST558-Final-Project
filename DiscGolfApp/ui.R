@@ -2,10 +2,12 @@
 # Josh Baber
 # shiny::runGitHub("JABaber/ST558-Final-Project", subdir = "DiscGolfApp/")
 
+# Read in packages
 library(shiny)
 library(shinydashboard)
 library(DT)
 
+# Add pages to the side bar for each section
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("About", tabName = "aboutSection"),
@@ -15,7 +17,7 @@ sidebar <- dashboardSidebar(
   )
 )
 
-# Define UI for application that draws a histogram
+# Start writing the body portion of the UI
 body <- dashboardBody(
     tabItems(
       
@@ -27,6 +29,7 @@ body <- dashboardBody(
       
       ################################################################################################################################################
       
+      # Text, images, and links for the "about" section
       tabItem(tabName = "aboutSection",
               fluidPage(
                 h1("Disc Golf Pro Tour 2022 Season Statistics and Modeling"), br(), h2("Josh Baber"), br(),
@@ -70,56 +73,78 @@ body <- dashboardBody(
       
       ################################################################################################################################################
       
+      # EDA section has five boxes
       tabItem(tabName = "EDASection",
               fluidRow(
+                # First box allows the user to choose plot type and which variable(s) to plot
                 box(width = 4,
+                  # User can select plot type either box plot, histogram, or scatter plot
                   selectInput("plotType", "Select Plot Type", choices = c("Box Plot", "Histogram", "Scatter Plot")),
                   conditionalPanel(
+                    # If the user selected box plot
                     condition = "input.plotType == 'Box Plot'",
+                    # Radio buttons for the user to choose what variable to make a box plot for
                     radioButtons("plotBoxVar", "Choose Variable for Box Plot", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                               "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                               "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                   ),
                   conditionalPanel(
+                    # If the user selected histogram
                     condition = "input.plotType == 'Histogram'",
+                    # Radio buttons for the user to choose what variable to make a histogram for
                     radioButtons("plotHistVar", "Choose Variable for Histogram", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                   "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                   "Circle2Putting", "ThrowInRate", "OBRate", "Points")),
+                    # User may also change the number of bins for the histogram, especially important if they decrease the number of players that are plotted
                     numericInput("bins", "Set Number of Bins", value = 30)
                   ),
                   conditionalPanel(
+                    # If the user selected scatter plot
                     condition = "input.plotType == 'Scatter Plot'",
-                    checkboxGroupInput("plotScatVars", "Choose Variables for Scatter Plot", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
+                    # Checkbox list for the user to choose variables for the scatter plot(s)
+                    checkboxGroupInput("plotScatVars", "Choose Variables for Scatter Plot(s)", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                              "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                              "Circle2Putting", "ThrowInRate", "OBRate", "Points"),
                                        selected = c("Circle1XPutting", "Points"))
                   )
                 ),
+                # Next box contains the summaries table options
                 box(width = 4,
+                    # Checkbox list to choose which variables to summarize
                     checkboxGroupInput("tableVars", "Choose Variables to Summarize In Table (Choose At Least 2)", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                           "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                           "Circle2Putting", "ThrowInRate", "OBRate", "Points"),
                                        selected = c("Birdie", "Circle1XPutting")),
+                    # Checkbox list to choose which summaries to perform on the selected variables
                     checkboxGroupInput("summaries", "Choose Summary Statistics", choiceNames = c("Mean", "Standard Deviation", "Minimum", "Median", "Maximum"),
                                        choiceValues = c("mean", "sd", "min", "median", "max"),
                                        selected = c("mean", "sd", "min", "median", "max"))
                 ),
+                # The user can filter the data for the top x players for both the summary table and the plot
                 box(width = 4,
+                    # Checkbox to see if user wants to filter the plot data
                     checkboxInput("filterPlotData", "Filter Players Based on Rank in Plot", value = FALSE),
+                    # Checkbox to see if user wants to filter the summary table data
                     checkboxInput("filterTabData", "Filter Players Based on Rank in Summaries", value = FALSE),
                     conditionalPanel(
+                      # If the plot data filter checkbox was checked
                       condition = "input.filterPlotData == 1",
+                      # By default, include all players, but can choose any number of top players from 1 to 420
                       numericInput("filterPlotRank", "Select Top X Players for Plot", value = 420, min = 1, max = 420),
                     ),
                     conditionalPanel(
+                      # If the summary table data filter checkbox was checked
                       condition = "input.filterTabData == 1",
+                      # By default, include all players, but can choose any number of top players from 1 to 420
                       numericInput("filterTabRank", "Select Top X Players for Summaries", value = 420, min = 1, max = 420)
                     )
                 ),
+                # Output the Plot
                 box(
                   h3("Plot"),
                   plotOutput("EDAPlot")
                 ),
+                # Output the summary table
                 box(
                   h3("Summaries Table"),
                   dataTableOutput("EDATable")
@@ -135,8 +160,10 @@ body <- dashboardBody(
       
       ################################################################################################################################################
       
+      # Model section has three sections, an info section, a model fitting section, and a prediction section
       tabItem(tabName = "modelSection",
         tabsetPanel(
+          # Modeling info tab is almost entirely text, but also includes a couple equations for MLR and sum of squares, for which I used uiOutput() for
           tabPanel("Modeling Info",
                       h1("About the Models"), br(),
                    "There are three different types of models that the user will be able to fit on the data.  Not only this, but they will be able to select certain rules for fitting the model as well as which variables to use.  The user will at the end be able to use their fitted model to predict a set of new data that they provide.  The three models that we are going to fit are", strong("a Multiple Linear Regression, a Regression Tree, and a Random Forest."), "I will describe them in more detail below:",
@@ -151,26 +178,35 @@ body <- dashboardBody(
                    )
           ),
           
+          # The model fitting panel has eight boxes
           tabPanel("Model Fitting",
                    fluidRow(
+                     # The first box will allow the user to choose the testing/training split as well as the number of folds used in cross validation for each model
                      box(width = 3,
                          h3("Universal Model Settings"),
+                         # Let the user choose a proportion from 0.5 to 0.95 of data to send to training set, default is 0.8
                          sliderInput("dataSplit", "Select Proportion of Data To Send to the Training Set", min = 0.5, max = 0.95, value = 0.8),
+                         # Let the user choose the number of folds to use in cross validation from 1 to 10, default is 5 folds
                          sliderInput("folds", "Select How Many Folds to Use for Cross Validation", min = 1, max = 10, value = 5)
                          ),
+                     # Second box allows user to choose variables in MLR model and whether or not to use interaction terms
                      box(width = 3,
                          h3("Multiple Linear Regression Settings"),
+                         # List of variables to choose from in checkboxes, select all by default
                          checkboxGroupInput("MLRVars", "Select the Variables To Use In MLR Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                                      "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                                      "Circle2Putting", "ThrowInRate", "OBRate"),
                                             selected = c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                          "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                          "Circle2Putting", "ThrowInRate", "OBRate")),
+                         # Checkbox for whether or not to use interaction terms in the model
                          checkboxInput("interaction", "Include Interaction Terms in Model?", value = FALSE)
                          
                          ),
+                     # Third box lets user choose variables for regression tree model as well as min, max, and step size for cp parameter
                      box(width = 3,
                          h3("Regression Tree Settings"),
+                         # Checkbox list of variables to include in the regression tree model, all selected by default
                          checkboxGroupInput("treeVars", "Select the Variables To Use In the Tree Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                                      "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                                      "Circle2Putting", "ThrowInRate", "OBRate"),
@@ -179,13 +215,18 @@ body <- dashboardBody(
                                                          "Circle2Putting", "ThrowInRate", "OBRate")),
                          h5(strong("Adjust the Complexity Parameter Values to Try")), br(),
                          "This determines how much improvement is need in the error at each node.  It essentially controls how many nodes the model has at the end.  We can choose a range of values to try and cross-validation will help us choose the best one.  The inputs below are min, max, and step size.  For example, if min = 0, max = 0.1, and step size = 0.001.  It will try values 0, 0.001, 0.002, 0.003, ..., 0.098, 0.099, 0.1.",
+                         # Set minimum cp value to try
                          numericInput("cpMin", "Set Minimum cp Value to Try", value = 0),
+                         # Set maximum cp value to try
                          numericInput("cpMax", "Set Maximum cp Value to Try", value = 0.1),
+                         # Set the step size of cp values to try
                          numericInput("cpStep", "Set cp Step Size", value = 0.001)
                          
                          ),
+                     # Fourth box lets user choose variables for random forest model as well as m parameter values to try
                      box(width = 3,
                          h3("Random Forest Settings"),
+                         # Checkbox list of variables to include in the random forest model, select all by default
                          checkboxGroupInput("rfVars", "Select the Variables To Use In the Tree Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                                           "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting"                                                                                                           , "Circle2Putting", "ThrowInRate", "OBRate"),
                                             selected = c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
@@ -193,40 +234,54 @@ body <- dashboardBody(
                                                          "Circle2Putting", "ThrowInRate", "OBRate")),
                          h5(strong("Adjust the Parameter That Determines the Number of Variables To Randomly Subset To")), br(),
                          "We can again use cross-validation to help us determine how many variable to subset to (m).  We can choose a range of values to try from our 12 predictors.",
+                         # Set minimum m value to try
                          numericInput("mMin", "Set Minimum m Value to Try", value = 1),
+                         # Set maximum m value to try
                          numericInput("mMax", "Set Maximum m Value to Try", value = 12)
                          )
                    ),
+                   # Button to press to fit all three models with the specified parameter values and variables selected, stylized the button too
                    actionButton("fit", "Click Here When Ready To Fit Models", icon("bolt", lib = "font-awesome"),
                                 style = "color: #fff; background-color: #337ab7; border-color: #2e6da4; padding: 30px; width: 1000px; font-size: 50px"), 
+                   # Now that the models are fit, we can display the results in separate boxes
                    fluidRow(
+                    # This box contains the RMSEs of each model on the training data set
                     box(width = 3,
                       h2("Training Set RMSEs of Each Model"),
                       dataTableOutput("RMSEs")
                     ),
+                    # This box contains the MLR summary from the console with verbatimTextOutput()
                     box(width = 5,
                         h2("MLR Fit and Coefficients"),
                         verbatimTextOutput("MLRfit")
                     ),
+                    # This box contains the variable importances from the random forest model
                     box(width = 4,
                       h2("Variable Importance from Random Forest"),
                       dataTableOutput("importance")
                     )),
+                   # New row for the tree plot and the testing fit statistics
                    fluidRow(
+                     # This box contains the plot of the regression tree
                     box(width = 6,
                         h2("Plot of Regression Tree"),
                         plotOutput("treePlot")
                     ),
+                    # This box contains the fit statistics for each model on the testing set
                     box(width = 6,
                         h2("Testing Set Fit Diagnostics of Each Model"),
                         dataTableOutput("testFit")
                     ))
           ),
+          # Lastly we have the tab panel, which has one box, a button, and two outputs
           tabPanel("Prediction",
                     fluidRow(
+                      # This box lets the user choose which model to predict with, and what values to use in the prediction
                       box(width = 4,
+                          # Choose the model from radio button list
                           radioButtons("predModel", "Choose A Model To Use For Prediction", c("Multiple Linear Regression", "Regression Tree", "Random Forest")),
                           h2("Set Values (In %) For Each Predictor That You Selected In the Chosen Model"),  "The other values will not effect your prediction so you can leave them be",
+                          # Set values for each predictor to use in the prediction, default for all of them is 50, with a min of 0 and max of 100, since they are all percentages
                           numericInput("predBirdie", "Birdie", value = 50, min = 0, max = 100),
                           numericInput("predPar", "Par", value = 50, min = 0, max = 100),
                           numericInput("predBogey", "Bogey", value = 50, min = 0, max = 100),
@@ -240,8 +295,12 @@ body <- dashboardBody(
                           numericInput("predThrowInRate", "ThrowInRate", value = 50, min = 0, max = 100),
                           numericInput("predOBRate", "OBRate", value = 50, min = 0, max = 100)
                       ),
-                      actionButton("predict", "Click Here When Ready To Predict"),
+                      # Button to press when ready to predict
+                      actionButton("predict", "Click Here When Ready To Predict", icon("bolt", lib = "font-awesome"),
+                                   style = "color: #fff; background-color: #337ab7; border-color: #2e6da4; padding: 30px; width: 1000px; font-size: 50px"),
+                      # Output the predicted Points from the console
                       verbatimTextOutput("PointsPrediction"),
+                      # Output the sentence that states what the predicted Points are
                       textOutput("points")
                     )
           )
@@ -256,16 +315,21 @@ body <- dashboardBody(
       
       ################################################################################################################################################
       
-    
+      # The last tab is the data section, which has two boxes, a data table output, and a download button
       tabItem(tabName = "dataSection",
         fluidRow(
+                # This box allows the user to filter the data to contain the top x players
                 box(width = 4,
+                    # Checkbox for whether or not the user wants to filter the data
                     checkboxInput("filterDT", "Filter Players Based on Rank", value = FALSE),
                     conditionalPanel(
+                      # If the checkbox was clicked 
                       condition = "input.filterDT == 1",
+                      # Let the user choose a cutoff value to include the top x players
                       numericInput("filterDTRank", "Select Top X Players", value = 420, min = 1, max = 420)
                       ),
                     ),
+                # This box lets the user choose which variables to include in the data, with all selected by default
                 box(width = 4,
                     checkboxGroupInput("DTVars", "Choose Columns To View/Save", choices = c("Place", "Name", "Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                             "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
@@ -275,15 +339,23 @@ body <- dashboardBody(
                                                     "Circle2Putting", "ThrowInRate", "OBRate", "Points"))
                     )
                 ),
+                # Output the data table
                 dataTableOutput("dataTable"),
-                downloadButton("downloadData", "Download")
+                # Download button to download the filtered/subset data set
+                downloadButton("downloadData", "Click Here to Download Data", icon("bolt", lib = "font-awesome"),
+                               style = "color: #fff; background-color: #337ab7; border-color: #2e6da4; padding: 30px; width: 1000px; font-size: 50px")
       )
   )
 )
 
+# Finally, we can put each piece together with dashboardPage()
 dashboardPage(
-  skin = "purple",
+  # Change the main color of the app
+  skin = "blue",
+  # Give the app a title for the top left corner
   dashboardHeader(title = "Disc Golf Data App"),
+  # Include the sidebar tabs
   sidebar,
+  # Include the body
   body
 )
