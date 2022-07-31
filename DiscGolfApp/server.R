@@ -51,14 +51,19 @@ shinyServer(function(input, output, session) {
     
     output$EDAPlot <- renderPlot({
       if(input$plotType == 'Box Plot'){
-        dataPlot <- ggplot(data = filterPlotData(), aes_string(x = input$plotBoxVar)) + geom_boxplot()
+        dataPlot <- ggplot(data = filterPlotData(), aes_string(x = input$plotBoxVar)) + geom_boxplot(fill = "lightskyblue") + 
+          labs(title = paste("Boxplot of", input$plotBoxVar))
       }
       else if(input$plotType == 'Histogram'){
-        dataPlot <- ggplot(data = filterPlotData(), aes_string(x = input$plotHistVar)) + geom_histogram(bins = input$bins)
+        dataPlot <- ggplot(data = filterPlotData(), aes_string(x = input$plotHistVar)) + geom_histogram(bins = input$bins, color = "black",
+                                                                                                        fill = "seagreen", alpha = 0.6) +
+          geom_vline(aes(xintercept = mean(!!sym(input$plotHistVar))), color = "maroon", size = 1) +
+          labs(title = paste("Histogram of", input$plotHistVar, "With Line at Mean"))
       }
       else if(input$plotType == "Scatter Plot"){
         plotData <- filterPlotData()
-        dataPlot <- ggpairs(data = plotData[,c(input$plotScatVars)])
+        dataPlot <- ggpairs(data = plotData[,c(input$plotScatVars)], lower = list(continuous = wrap("smooth", color = "darksalmon")),
+                            diag = list(continuous = wrap("densityDiag", fill = "lavender")), upper = list(continuous = wrap("cor", color = "blue")))
       }
       return(dataPlot)
     })
@@ -68,6 +73,7 @@ shinyServer(function(input, output, session) {
       newTabData <- tabData[,c(input$tableVars)]
       discSummary <- describe(newTabData)
       newDiscSummary <- round(discSummary[,c(input$summaries)], digits = 4)
+      colnames(newDiscSummary) <- c("Mean", "Standard Deviation", "Min", "Median", "Max")
       return(newDiscSummary)
     })
     
@@ -79,7 +85,26 @@ shinyServer(function(input, output, session) {
     
     ################################################################################################################################################
     
+    output$MLREquation <- renderUI({
+      withMathJax(
+        helpText(
+          '$$\\hat{Y} = \\beta_0 + \\beta_1 x_1 + \\beta_2 x_2 + ... + \\beta_n x_n$$'
+        )
+      )
+    })
+    
+    output$squaresEquation <- renderUI({
+      withMathJax(
+        helpText(
+          '$$\\textit{min}_{\\beta_0 , \\beta_1} = \\displaystyle\\sum_{i = 1} ^{n} (y_i - \\beta_0 - \\beta_1 x_1 - ... - \\beta_n x_n)^2$$'
+        )
+      )
+    })
+    
+    
     observeEvent(input$fit, {
+      
+      showModal(modalDialog("Fitting Models...", footer = NULL))
       
       split <- createDataPartition(fullSeason$Points, p = input$dataSplit, list = FALSE)
       trainScores <- fullSeason[split,]
@@ -124,11 +149,15 @@ shinyServer(function(input, output, session) {
                   preProcess = c("center", "scale"),
                   tuneGrid = expand.grid(mtry = c(input$mMin : input$mMax)))
       
+      removeModal()
+      
       output$RMSEs <- renderDataTable({
         RMSETable <- tibble(MLR$results$RMSE, min(regTree$results$RMSE), min(RF$results$RMSE))
         colnames(RMSETable) <- c("MLR", "RegressionTree", "RandomForest")
         RMSETable <- round(RMSETable, digits = 4)
-        return(RMSETable)
+        RMSETablePivot <- t(RMSETable)
+        colnames(RMSETablePivot) <- c("RMSE")
+        return(RMSETablePivot)
       })
       
       output$MLRfit <- renderPrint({
@@ -140,7 +169,8 @@ shinyServer(function(input, output, session) {
       })
       
       output$importance <- renderDataTable({
-        varImp(RF)$importance
+        rfImp <- datatable(round(varImp(RF)$importance, digits = 4), options = list(pageLength = 12))
+        return(rfImp)
       })
       
       output$testFit <- renderDataTable({
@@ -152,7 +182,8 @@ shinyServer(function(input, output, session) {
           postResample(regTreePred, obs = treeTest$Points),
           postResample(rfPred, obs = rfTest$Points)
         )
-        colnames(errorTab) <- c("MLR", "RegTree", "RandomForest")
+        colnames(errorTab) <- c("MLR", "Regression Tree", "Random Forest")
+        errorTab <- round(errorTab, digits = 4)
         return(errorTab)
       })
     })
@@ -187,6 +218,8 @@ shinyServer(function(input, output, session) {
       })
       
       output$PointsPrediction <- renderPrint(predictedPoints())
+      
+      output$points <- renderText(paste("A player with these statistics is predicted to have", round(predictedPoints(), digits = 4), "points."))
     })
     
     

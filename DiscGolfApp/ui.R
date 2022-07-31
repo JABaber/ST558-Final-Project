@@ -38,6 +38,7 @@ body <- dashboardBody(
                 
                 "There 12 predictors to choose from in this data set, with the response variable being the total points a player has in the standings.  I can explain them briefly here, but more detail can be found at the", tags$a("UDisc About Stats Webpage.", href = "https://www.udisclive.com/about"), 
                 tags$ul(
+                  tags$li(strong("Place"), "- a player's current ranking in the standings."),
                   tags$li(strong("Birdie, Par, and Bogey Rates"), "- are the percent of holes played that each player got birdies or better, pars, or bogeys on."),
                   tags$li(strong("Fairway in Reg"), "- is essentially the percent of holes a player is on the fairway or better with two shots remaining for par.  The technical definition of this changes for pars 3, 4, or 5.  Parked in Reg, Circle1 in Reg, and Circle2 in Reg all may contribute to this stat."),
                   tags$li(strong("Parked in Reg"), "- is the percent of holes a player has a tap-in putt for birdie or better.  A shot is defined as", strong("Parked"), "if the shot is within 10 feet of the basket. Circle 1 in Reg may contribute to this stat."),
@@ -55,9 +56,9 @@ body <- dashboardBody(
                 "In short, I was able to use ", tags$a("this data scraper Chrome extension", href = "https://chrome.google.com/webstore/detail/instant-data-scraper/ofaokhiedipichpaobibbnahnkdoiiah?hl=en-US"), " to grab the data from the UDisc webpage as a CSV file.  It took some cleaning to do, like dropping irrelevant columns, renaming the columns, and scaling them.  Most of the data is given as percentages with a % symbol, so I had to use lapply() to remove them and convert them from decimals since whole numbers are easier to interpret.  Also, the total points each player had were not available on the 2022 Season Stats Webpage, so I had to go to the ", tags$a("2022 Season Standings Webpage", href = "https://www.udisclive.com/standings?d=MPO"), " to again scrape the data into a CSV.  I then performed a left join on the player's names in R to create the final data set.  The code to create the data set can be found", tags$a("here.", href = "https://github.com/JABaber/ST558-Final-Project/blob/main/DiscGolfDataCleaning.Rmd"),  "An image of the 2022 Pro Tour Schedule can be found below:", br(), imageOutput("DGPT", inline = TRUE), br(), 
                 
                 h3("Explanation of Tabs"), br(),
-                h5("Data Exploration Tab"), br(),
-                h5("Modeling Tab"), br(),
-                h5("Data Tab")
+                h4(strong("Data Exploration Tab")), br(), "The Data Exploration Tab will allow the user to produce plots and numerical summaries of the data.  Since all of the predictors are numeric, the three plot type options are boxplot, histogram, and scatter plot.  The user can choose whatever variables they want to include in the plots.  The user can also choose whatever variables to include in the numeric summaries table.  They can choose the summaries they want to include in the summary table from mean, standard deviation, minimum, maximum, and median.  Lastly, the user has the option to filter the data based on the top x number of players.  If they wanted to plot or summarize the stats from only the top 100 players, they can do that.  This could be useful in seeing how the stats/improve as we look at a selection of better players.", br(),
+                h4(strong("Modeling Tab")), br(), "The Modeling Tab is for fitting models on the data and using them to predict points.  There are three models to fit: Multiple Linear Regression, Regression Tree, and Random Forest.  A table will be produced that contains the errors of each model on the testing and training set, so that we can compare their fits and prediction powers.  The random forest model also has a variable importance feature, which helps us see which disc golf stats are most important when predicting points.  The user can also customize which predictors to include in each model, as well as tuning parameters that control how each model is fit.  They can choose what proportion of data to use in the training/testing sets, as well as how many folds of cross validation to use.  The Prediction tab will let the user choose a model to predict Points with, using user-defined values for each predictor that they included in that model.  ", br(),
+                h4(strong("Data Tab")), br(), "The Data Tab displays the data from UDisc that was used in fitting the models and plotting/summarizing.  By default, it displays the full data set, but the user can filter the columns/predictors that they want to see as well as the rows based on the top x players that they choose.  They can save the full or subset data to a CSV file with the click of a button."
               )
       ),
       
@@ -116,9 +117,11 @@ body <- dashboardBody(
                     )
                 ),
                 box(
+                  h3("Plot"),
                   plotOutput("EDAPlot")
                 ),
                 box(
+                  h3("Summaries Table"),
                   dataTableOutput("EDATable")
                 )
               )
@@ -138,7 +141,11 @@ body <- dashboardBody(
                       h1("About the Models"), br(),
                    "There are three different types of models that the user will be able to fit on the data.  Not only this, but they will be able to select certain rules for fitting the model as well as which variables to use.  The user will at the end be able to use their fitted model to predict a set of new data that they provide.  The three models that we are going to fit are", strong("a Multiple Linear Regression, a Regression Tree, and a Random Forest."), "I will describe them in more detail below:",
                    tags$ul(
-                     tags$li(strong("Multiple Linear Regression"), "- uses a linear combination of predictors in an equation to predict the response variable, which is a continuous numeric variable.", strong("insert equation here"), "the values for these coefficients are found using linear algebra to find the solution of Beta values that minimize the sum of squared residuals.", strong("insert next equation here"), "These beta coefficients can be interpreted as the change in the response value for a one unit increase in the predictor x.  Multiple Linear Regression can also feature polynomial and interaction terms.  A polynomial term is simply when we raise a predictor's x value in that equation to some power other than 1.  An interaction term takes the product of two Xs (predictors) and finds a beta coefficient for that product.  This complicates the interpretation a bit, but essentially the beta represents the change in the response variable when we increase the product of two predictors by 1, which represents the effect they have on each other as well as the response.  The Multiple Linear Regression model is usually quick to solve with a computer and is one of the older prediction models around.  It has plenty of extensions that can improve prediction power or predictor selection.  The major downside of this type of model is that they require some pretty strong assumptions to be made about the data, most of which are usually not true.  These assumptions include having normally distributed errors with equal variances across all values of independent variables and a lack of collinearity (or correlation) between predictors.  Most of the time, these are stretches to assume, but when it is relatively safe to assume they are true, or it can be proven, the Multiple Linear Regression model can be a great, somewhat easy to interpret choice."),
+                     tags$li(strong("Multiple Linear Regression"), "- uses a linear combination of predictors in an equation to predict the response variable, which is a continuous numeric variable.", br(),
+                             uiOutput("MLREquation"), br(),
+                             "The values for these coefficients are found using linear algebra to find the solution of Beta values that minimize the sum of squared residuals.", br(),
+                             uiOutput("squaresEquation"), br(),
+                             "These beta coefficients can be interpreted as the change in the response value for a one unit increase in the predictor x.  Multiple Linear Regression can also feature polynomial and interaction terms.  A polynomial term is simply when we raise a predictor's x value in that equation to some power other than 1.  An interaction term takes the product of two Xs (predictors) and finds a beta coefficient for that product.  This complicates the interpretation a bit, but essentially the beta represents the change in the response variable when we increase the product of two predictors by 1, which represents the effect they have on each other as well as the response.  The Multiple Linear Regression model is usually quick to solve with a computer and is one of the older prediction models around.  It has plenty of extensions that can improve prediction power or predictor selection.  The major downside of this type of model is that they require some pretty strong assumptions to be made about the data, most of which are usually not true.  These assumptions include having normally distributed errors with equal variances across all values of independent variables and a lack of collinearity (or correlation) between predictors.  Most of the time, these are stretches to assume, but when it is relatively safe to assume they are true, or it can be proven, the Multiple Linear Regression model can be a great, somewhat easy to interpret choice."),
                      tags$li(strong("Regression Tree"), "- evalutates at every possible value of each predictor and performs some measure of error, usually the Residual Sum of Squares like in Multiple Linear Regression.  It chooses the value that minimizes the error and creates a split there.  A split essentially just divides the data into two groups, and the algorithm again will continue to look for splits in these groups based on the predictors and so on.  Many splits may be done, leading to many branches for the data to fall into.  The Regression Tree model will eventually create too many of these branches, which can lead to overfitting.  This essentially makes the model really good at predicting for the data that it was trained on, but really bad at predicting new data.  The model then prunes itself back to a reasonable amount of splits/branches.  The statistician fitting these models can decide how many groups they want in the end, which determines how far the model prunes itself back.  An advantage of the Regression Tree is that it is super easy to interpret, you just follow the line for a data point down the branches to a prediction.  The first few splits usually make sense intuitively as well.  They are also pretty quick to fitting with a computer.  The major disadvantage of these models is that they can be heavily biased towards the data they were trained on.  Small changes in the data may lead to huge differences in splits.  They might create a few splits, and those splits are good for the data they used but not for new data.  They also suffer heavily from collinearity between predictors.  If two or more predictors are highly correlated, they might create bad splits or lead to less information obtained from the data, however, this will not affect prediction as much."),
                      tags$li(strong("Random Forest"), "- is essentially an average of many, many regression trees.  It creates random (bootstrapped) samples from the data and fits a tree to each of these samples.  It then averages across all of these trees to find optimal splits that are more reliable and less variant than had a single tree been fit.  When predicting, the Random Forest model predicts the mean of predictions across all models.  The Random Forest, however, does one more major step.  Had it used the process I just described, if there existed a really strong predictor then many of the trees would create an early split using the predictor at similar values.  This can result in an omission of much of the information that comes from the other predictors, since they won't be as likely to get a split.  The Random Forest circumvents this by randomly subsetting the predictors every time it fits a tree.  The statistician fitting the model is responsible for deciding how many predictors to use each time, or may use cross-validation to decide.  The advantage of this is that it can get more even splits for prediction, largely avoiding collinearity.  This leads to better overall predictions with fewer assumptions compared to the Multiple Linear Regression model.  However, this process can take an extremely long time to run, especially with cross-validation.  For large data sets that have tons of observations and tons of predictors, this may end up taking too long to fit.")
                    )
@@ -152,7 +159,7 @@ body <- dashboardBody(
                          sliderInput("folds", "Select How Many Folds to Use for Cross Validation", min = 1, max = 10, value = 5)
                          ),
                      box(width = 3,
-                         h3("MLR Settings"),
+                         h3("Multiple Linear Regression Settings"),
                          checkboxGroupInput("MLRVars", "Select the Variables To Use In MLR Model", c("Birdie", "Par", "Bogey", "Fairway", "Parked", 
                                                                                                      "Circle1InReg", "Circle2InReg", "Scramble", "Circle1XPutting", 
                                                                                                      "Circle2Putting", "ThrowInRate", "OBRate"),
@@ -190,28 +197,30 @@ body <- dashboardBody(
                          numericInput("mMax", "Set Maximum m Value to Try", value = 12)
                          )
                    ),
-                   actionButton("fit", "Click Here When Ready To Fit Models"), 
-                   "Put Progress Bar Here",
+                   actionButton("fit", "Click Here When Ready To Fit Models", icon("bolt", lib = "font-awesome"),
+                                style = "color: #fff; background-color: #337ab7; border-color: #2e6da4; padding: 30px; width: 1000px; font-size: 50px"), 
                    fluidRow(
                     box(width = 3,
                       h2("Training Set RMSEs of Each Model"),
                       dataTableOutput("RMSEs")
                     ),
-                    box(width = 3,
+                    box(width = 5,
                         h2("MLR Fit and Coefficients"),
                         verbatimTextOutput("MLRfit")
                     ),
-                    box(width = 3,
+                    box(width = 4,
+                      h2("Variable Importance from Random Forest"),
+                      dataTableOutput("importance")
+                    )),
+                   fluidRow(
+                    box(width = 6,
                         h2("Plot of Regression Tree"),
                         plotOutput("treePlot")
                     ),
-                    box(width = 3,
-                        h2("Variable Importance from Random Forest"),
-                        dataTableOutput("importance")
-                    )
-                   ),
-                   h2("Testing Set Fit Diagnostics of Each Model"),
-                   dataTableOutput("testFit")
+                    box(width = 6,
+                        h2("Testing Set Fit Diagnostics of Each Model"),
+                        dataTableOutput("testFit")
+                    ))
           ),
           tabPanel("Prediction",
                     fluidRow(
@@ -232,7 +241,8 @@ body <- dashboardBody(
                           numericInput("predOBRate", "OBRate", value = 50, min = 0, max = 100)
                       ),
                       actionButton("predict", "Click Here When Ready To Predict"),
-                      verbatimTextOutput("PointsPrediction")
+                      verbatimTextOutput("PointsPrediction"),
+                      textOutput("points")
                     )
           )
         )
