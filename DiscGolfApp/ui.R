@@ -342,7 +342,7 @@ body <- dashboardBody(
                 # Output the data table
                 dataTableOutput("dataTable"),
                 # Download button to download the filtered/subset data set
-                downloadButton("downloadData", "Click Here to Download Data", icon("bolt", lib = "font-awesome"),
+                downloadButton("downloadData", "Click Here to Download Data",
                                style = "color: #fff; background-color: #337ab7; border-color: #2e6da4; padding: 30px; width: 1000px; font-size: 50px")
       )
   )
